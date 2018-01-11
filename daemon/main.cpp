@@ -4,25 +4,11 @@
 #include "TokenBalance.hpp"
 #include "WebSocketServer.h"
 
-#include <iostream>
-#include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
-#include <boost/thread.hpp>
 
 constexpr int s_uint_minimum_required_token_balance = 100;
 constexpr char s_etherscan_api_token_envar_name[] = "ETHERSCAN_IO_API_TOKEN";
 
-void
-initialize_daemon()
-{
-    // TODO: Mehdi, put your config file work here.
-    // If we don't have a node id in the config file, then generate one here
-    // Mehdi, for now we just generate a new  node id everytime we restart the node,
-    // but we should really check the config file first.
-    boost::uuids::basic_random_generator<boost::mt19937> gen;
-    const boost::uuids::uuid node_id{gen()};
-    DaemonInfo::get_instance().set_value("node_id", boost::lexical_cast<std::string>(node_id));
-}
 
 int
 parse_command_line(
@@ -59,18 +45,19 @@ parse_command_line(
     return 0;
 }
 
-void
-display_daemon_info()
-{
-    DaemonInfo &daemon_info = DaemonInfo::get_instance();
-    auto port = daemon_info.get_value<unsigned short>("port");
 
-    std::cout << "Running node with ID: " << daemon_info.get_value<std::string>("node_id") << "\n"
-              << " Ethereum Address ID: " << daemon_info.get_value<std::string>("ethereum_address") << "\n"
-              << "             on port: " << port << "\n"
-              << "       Token Balance: " << daemon_info.get_value<unsigned short>("ropsten_token_balance") << " BLZ\n"
-              << std::endl;
+void
+initialize_daemon()
+{
+    // TODO: Mehdi, put your config file work here.
+    // If we don't have a node id in the config file, then generate one here
+    // Mehdi, for now we just generate a new  node id everytime we restart the node,
+    // but we should really check the config file first.
+    boost::uuids::basic_random_generator<boost::mt19937> gen;
+    const boost::uuids::uuid node_id{gen()};
+    DaemonInfo::get_instance().set_value("node_id", boost::lexical_cast<std::string>(node_id));
 }
+
 
 int
 check_token_balance()
@@ -97,26 +84,40 @@ check_token_balance()
     return 0;
 }
 
-int
-main(int argc,
-     char *argv[])
-{
-    initialize_daemon();
 
+void
+validate_node(
+    int argc,
+    char* argv[])
+{
     if (0 != parse_command_line(argc, argv))
         {
-        return -1;
+        exit(-1);
         }
 
     if (0 != check_token_balance())
         {
-        return -1;
+        exit(-1);
         }
+}
 
-    display_daemon_info();
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Start the daemon work.
+void
+display_daemon_info()
+{
+    DaemonInfo &daemon_info = DaemonInfo::get_instance();
+    auto port = daemon_info.get_value<unsigned short>("port");
+
+    std::cout << "Running node with ID: " << daemon_info.get_value<std::string>("node_id") << "\n"
+              << " Ethereum Address ID: " << daemon_info.get_value<std::string>("ethereum_address") << "\n"
+              << "             on port: " << port << "\n"
+              << "       Token Balance: " << daemon_info.get_value<unsigned short>("ropsten_token_balance") << " BLZ\n"
+              << std::endl;
+}
+
+
+void start_websocket_server()
+{
     std::shared_ptr<Listener> listener;
     boost::thread websocket_thread
         (
@@ -128,7 +129,11 @@ main(int argc,
                     1
                 )
         );
+}
 
+
+void start_node()
+{
     boost::asio::io_service ios; // I/O service to use.
     boost::thread_group tg;
     Node this_node(ios);
@@ -144,8 +149,19 @@ main(int argc,
     catch (std::exception &ex)
         {
         std::cout << ex.what() << std::endl;
-        return 1;
+        exit(1);
         }
+}
 
+
+int
+main(int argc,
+     char *argv[])
+{
+    initialize_daemon();
+    validate_node(argc, argv);
+    display_daemon_info();
+    start_websocket_server();
+    start_node();
     return 0;
 }
