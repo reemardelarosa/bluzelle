@@ -1,23 +1,19 @@
 #include "CommandLineOptions.h"
 #include "Listener.h"
-#include "WebSocketServer.h"
-#include "TokenBalance.hpp"
-#include "node/Singleton.h"
-#include "node/DaemonInfo.h"
-#include "CommandLineOptions.h"
 #include "Node.h"
-
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-
+#include "TokenBalance.hpp"
+#include "WebSocketServer.h"
 
 #include <iostream>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 #include <boost/thread.hpp>
 
 constexpr int s_uint_minimum_required_token_balance = 100;
 constexpr char s_etherscan_api_token_envar_name[] = "ETHERSCAN_IO_API_TOKEN";
 
-void initialize_daemon()
+void
+initialize_daemon()
 {
     // TODO: Mehdi, put your config file work here.
     // If we don't have a node id in the config file, then generate one here
@@ -28,9 +24,10 @@ void initialize_daemon()
     DaemonInfo::get_instance().set_value("node_id", boost::lexical_cast<std::string>(node_id));
 }
 
-int parse_command_line(
-        int argc,
-        char *argv[]
+int
+parse_command_line(
+    int argc,
+    char *argv[]
 )
 {
     CommandLineOptions options;
@@ -47,22 +44,25 @@ int parse_command_line(
         std::cout << address << " is not a valid Ethereum address." << std::endl;
         return 1;
         }
-    DaemonInfo::get_instance().set_value( "ethereum_address", address);
+    DaemonInfo::get_instance().set_value("ethereum_address", address);
 
     uint port = options.get_port();
     if (!CommandLineOptions::is_valid_port(port))
         {
-        std::cout << port << " is not a valid port. Please pick a port in 49152 - 65535 range" << std::endl;
+        std::cout << port
+                  << " is not a valid port. Please pick a port in 49152 - 65535 range"
+                  << std::endl;
         return 1;
         }
-    DaemonInfo::get_instance().set_value("port",port);
+    DaemonInfo::get_instance().set_value("port", port);
     DaemonInfo::get_instance().set_value("name", "Node_running_on_port_" + std::to_string(port));
     return 0;
 }
 
-void display_daemon_info()
+void
+display_daemon_info()
 {
-    DaemonInfo& daemon_info = DaemonInfo::get_instance();
+    DaemonInfo &daemon_info = DaemonInfo::get_instance();
     auto port = daemon_info.get_value<unsigned short>("port");
 
     std::cout << "Running node with ID: " << daemon_info.get_value<std::string>("node_id") << "\n"
@@ -72,7 +72,8 @@ void display_daemon_info()
               << std::endl;
 }
 
-int check_token_balance()
+int
+check_token_balance()
 {
     auto token = getenv(s_etherscan_api_token_envar_name);
     if (token == nullptr)
@@ -82,12 +83,12 @@ int check_token_balance()
         return 1;
         }
 
-    DaemonInfo& daemon_info = DaemonInfo::get_instance();
+    DaemonInfo &daemon_info = DaemonInfo::get_instance();
 
     uint64_t balance = get_token_balance(daemon_info.get_value<std::string>("ethereum_address"), token);
     if (balance < s_uint_minimum_required_token_balance)
         {
-        std::cout << "Insufficient BZN token balance. Te balance of "
+        std::cout << "Insufficient BZN token balance. The balance of "
                   << s_uint_minimum_required_token_balance << "BZN required to run node. Your balance is "
                   << balance << "BZN" << std::endl;
         return 1;
@@ -96,16 +97,18 @@ int check_token_balance()
     return 0;
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc,
+     char *argv[])
 {
     initialize_daemon();
 
-    if( 0 != parse_command_line(argc, argv) )
+    if (0 != parse_command_line(argc, argv))
         {
         return -1;
         }
 
-    if( 0 != check_token_balance())
+    if (0 != check_token_balance())
         {
         return -1;
         }
@@ -116,19 +119,18 @@ int main(int argc, char *argv[])
     // Start the daemon work.
     std::shared_ptr<Listener> listener;
     boost::thread websocket_thread
-            (
+        (
             WebSocketServer
-                    (
-                            "127.0.0.1",
-                            DaemonInfo::get_instance().get_value<unsigned short>("port") + 1000,
-                            listener,
-                            1
-                    )
-            );
+                (
+                    "127.0.0.1",
+                    DaemonInfo::get_instance().get_value<unsigned short>("port") + 1000,
+                    listener,
+                    1
+                )
+        );
 
     boost::asio::io_service ios; // I/O service to use.
     boost::thread_group tg;
-
     Node this_node(ios);
     try
         {
@@ -139,7 +141,7 @@ int main(int argc, char *argv[])
             }
         ios.run();
         }
-    catch (std::exception& ex)
+    catch (std::exception &ex)
         {
         std::cout << ex.what() << std::endl;
         return 1;

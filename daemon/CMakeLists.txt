@@ -110,7 +110,7 @@ set(SOURCE_FILES
         raft/commands/RaftCountVotesCommand.cpp
         raft/commands/RaftHeartbeatCommand.h
         raft/commands/RaftHeartbeatCommand.cpp
-        raft/RaftState.cpp)
+        raft/RaftState.cpp node/Daemon.cpp node/Daemon.h)
 
 add_executable(the_db ${SOURCE_FILES})
 target_link_libraries(the_db ${Boost_LIBRARIES})
@@ -149,7 +149,7 @@ set(SOURCE_FILES
         websockets/Session.h
         websockets/WebSocketServer.h
         websockets/WebSocketServer_tests.cpp
-        )
+        node/Daemon.cpp node/Daemon.h node/Daemon_tests.cpp)
 add_executable(the_db_test ${SOURCE_FILES})
 target_link_libraries(the_db_test ${Boost_LIBRARIES})
 if(UNIX AND NOT APPLE)
