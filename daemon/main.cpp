@@ -5,6 +5,8 @@
 #include "WebSocketServer.h"
 
 #include <boost/uuid/uuid_generators.hpp>
+#include <boost/asio.hpp>
+
 
 constexpr int s_uint_minimum_required_token_balance = 100;
 constexpr char s_etherscan_api_token_envar_name[] = "ETHERSCAN_IO_API_TOKEN";
@@ -116,6 +118,18 @@ display_daemon_info()
 }
 
 
+const std::string local_ip_address()
+{
+    boost::asio::io_service io_service;
+    boost::asio::ip::tcp::resolver resolver(io_service);
+    boost::asio::ip::tcp::resolver::query query(boost::asio::ip::host_name(), "");
+    boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
+    boost::asio::ip::tcp::endpoint endpoint = *it;
+    return endpoint.address().to_string();
+}
+
+
+
 void start_websocket_server()
 {
     std::shared_ptr<Listener> listener;
@@ -123,7 +137,7 @@ void start_websocket_server()
         (
             WebSocketServer
                 (
-                    "127.0.0.1",
+                    local_ip_address().c_str(),
                     DaemonInfo::get_instance().get_value<unsigned short>("port") + 1000,
                     listener,
                     1
@@ -154,10 +168,19 @@ void start_node()
 }
 
 
+
+
 int
 main(int argc,
      char *argv[])
 {
+    // TODO Move this out of main
+    std::cout << local_ip_address() << '\n';
+
+
+
+
+
     initialize_daemon();
     validate_node(argc, argv);
     display_daemon_info();

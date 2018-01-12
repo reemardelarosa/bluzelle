@@ -4,15 +4,17 @@
 #include "Node.h"
 #include "DaemonInfo.h"
 
+const std::string local_ip_address();
+
 
 Node::Node(boost::asio::io_service& ios )
         : raft_(ios),
-        server_ (ios,
-                "127.0.0.1",
-                DaemonInfo::get_instance().get_value<unsigned short>("port"),
-                std::bind (&Raft::handle_request,
-                           &raft_,
-                           std::placeholders::_1))
+          server_ (ios,
+                   local_ip_address().c_str(),
+                   DaemonInfo::get_instance().get_value<unsigned short>("port"),
+                   std::bind (&Raft::handle_request,
+                              &raft_,
+                              std::placeholders::_1))
 {
 
 }

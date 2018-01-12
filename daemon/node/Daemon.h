@@ -46,8 +46,6 @@ public:
         return 0;
     }
 
-
-
     std::string get_info()
     {
         std::stringstream ss;
