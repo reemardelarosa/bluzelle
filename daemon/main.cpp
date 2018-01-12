@@ -130,7 +130,22 @@ const std::string local_ip_address()
 
     boost::asio::ip::tcp::endpoint endpoint = it->endpoint();
 
-    std::cout << "ip: [" << endpoint.address().to_string() << "]" << std::endl;
+    tcp::resolver::iterator end;
+
+    std::cout << "\n";
+
+    while(end != it)
+        {
+        std::cout << "[" << it->endpoint() << "]\n";
+        ++it;
+        }
+
+    std::cout << std::endl;
+
+
+
+
+    //std::cout << "ip: [" << endpoint.address().to_string() << "]" << std::endl;
 
 
     return endpoint.address().to_string();
