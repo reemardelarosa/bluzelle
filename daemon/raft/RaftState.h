@@ -37,10 +37,13 @@ public:
 protected:
     boost::asio::io_service& ios_;
 
-    PeerList& peers_;
-    ApiCommandQueue& peer_queue_;
-    Storage& storage_;
     CommandFactory& command_factory_;
+
+    ApiCommandQueue& peer_queue_;
+
+    PeerList& peers_;
+
+    Storage& storage_;
 
     function<string(const string&)> handler_;
     unique_ptr<RaftState>& next_state_;

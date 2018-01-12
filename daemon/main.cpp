@@ -6,6 +6,7 @@
 
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/asio.hpp>
+#include <iostream>
 
 
 constexpr int s_uint_minimum_required_token_balance = 100;
@@ -120,11 +121,18 @@ display_daemon_info()
 
 const std::string local_ip_address()
 {
+    std::string host_name = boost::asio::ip::host_name();
+    std::cout << "host name: [" <<  host_name << "]" << std::endl;
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::resolver resolver(io_service);
-    boost::asio::ip::tcp::resolver::query query(boost::asio::ip::host_name(), "");
+    boost::asio::ip::tcp::resolver::query query(host_name, "");
     boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
-    boost::asio::ip::tcp::endpoint endpoint = *it;
+
+    boost::asio::ip::tcp::endpoint endpoint = it->endpoint();
+
+    std::cout << "ip: [" << endpoint.address().to_string() << "]" << std::endl;
+
+
     return endpoint.address().to_string();
 }
 
@@ -175,12 +183,6 @@ main(int argc,
      char *argv[])
 {
     // TODO Move this out of main
-    std::cout << local_ip_address() << '\n';
-
-
-
-
-
     initialize_daemon();
     validate_node(argc, argv);
     display_daemon_info();
